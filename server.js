@@ -18,6 +18,7 @@ app.use(cors({
         ? [
             "https://cinebook.netlify.app",
             "https://cinebook-frontend.netlify.app", 
+            "https://cinebookproject.netlify.app",
             "https://cinebook.vercel.app",
             "https://cinebook-frontend.vercel.app",
             process.env.FRONTEND_URL
