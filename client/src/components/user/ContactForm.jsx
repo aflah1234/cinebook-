@@ -49,17 +49,17 @@ const ContactForm = () => {
             <ul className="space-y-4">
               <li className="flex items-center gap-2">
                 <Mail className="w-6 h-6 text-primary" />
-                <a href="mailto:lockmyseats@gmail.com" className="text-primary">
-                  lockmyseats@gmail.com
+                <a href="mailto:cinebook@gmail.com" className="text-primary">
+                  cinebook@gmail.com
                 </a>
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="w-6 h-6 text-primary" />
-                +91 8606727349
+                +91 2468101212
               </li>
               <li className="flex items-center gap-2">
                 <MapPin className="w-6 h-6 text-primary" />
-                Mahe, Puducherry, India
+                wayanad, kerala{/*  */}, India
               </li>
             </ul>
           </div>

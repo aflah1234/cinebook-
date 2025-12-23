@@ -51,7 +51,7 @@ const HeroSection = () => {
           animate="animate"
         >
           <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
-            LockMySeat
+            CineBook
           </span>
           <br />
           Your Cinematic Journey Begins!

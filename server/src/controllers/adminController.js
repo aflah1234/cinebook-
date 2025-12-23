@@ -27,6 +27,16 @@ export const signup = async (req, res) => {
                 // If user exists but is not verified, update their details
                 admin.name = name; // Ensure updated name
                 admin.password = await bcrypt.hash(password, 10); // Update password
+                
+                // Skip OTP in development mode
+                if (NODE_ENV === 'development' && process.env.SKIP_OTP_IN_DEV === 'true') {
+                    admin.isVerified = true;
+                    admin.otp = null;
+                    admin.otpExpires = null;
+                    await admin.save();
+                    return res.json({ message: "Registration successful (OTP skipped in development)." });
+                }
+                
                 admin.otp = Math.floor(100000 + Math.random() * 900000);
                 admin.otpExpires = Date.now() + 3 * 60 * 1000;
 
@@ -40,6 +50,20 @@ export const signup = async (req, res) => {
 
         // Create a new user only if no existing record is found
         const hashedPassword = await bcrypt.hash(password, 10);
+        
+        // Skip OTP in development mode
+        if (NODE_ENV === 'development' && process.env.SKIP_OTP_IN_DEV === 'true') {
+            const newAdmin = new Admin({
+                name,
+                email,
+                password: hashedPassword,
+                role,
+                isVerified: true
+            });
+            await newAdmin.save();
+            return res.json({ message: "Registration successful (OTP skipped in development)." });
+        }
+        
         const otp = Math.floor(100000 + Math.random() * 900000);
         const otpExpires = Date.now() + 4 * 60 * 1000;
 

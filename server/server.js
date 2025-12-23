@@ -14,12 +14,12 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
-    origin: ["http://localhost:5173","https://lock-my-seat.vercel.app"],
+       origin: ["http://localhost:5000", "http://localhost:5002", "http://localhost:3000"],
     credentials: true
 }))
 
 app.get("/", (req, res) => {
-    res.send("Hello Welcome To LockMySeat");
+    res.send("Hello Welcome To CineBook");
 });
 
 app.use('/api', apiRoutes)
@@ -30,8 +30,34 @@ app.all("*", (req, res) => res.status(404).json({ message: "Route not found" }))
 
 
 
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-    connectDB();
-})
+const start = async () => {
+    // Allow skipping DB connect for local dev (e.g., when working offline):
+    if (process.env.SKIP_DB_ON_START === 'true') {
+        console.warn('SKIP_DB_ON_START=true — starting server without DB connection');
+        app.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
+        return;
+    }
+
+    const ok = await connectDB();
+    if (!ok) {
+        console.error('Could not connect to MongoDB. Ensure `MONGO_URI` is correct and your Atlas cluster allows connections from your IP address.');
+        console.error('If you want to start without a DB (development only), set SKIP_DB_ON_START=true in your .env');
+        process.exit(1);
+    }
+
+    app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
+    });
+};
+
+start();
+
+// Prevent unhandled rejections from crashing the dev server so frontend can still run
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+    console.error('Uncaught Exception:', err);
+});
 

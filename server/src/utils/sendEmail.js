@@ -2,6 +2,8 @@ import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 dotenv.config();
 
+const NODE_ENV = process.env.NODE_ENV;
+
 const sendEmail = async (email, type, data) => {
     try {
         const transporter = nodemailer.createTransport({
@@ -18,11 +20,11 @@ const sendEmail = async (email, type, data) => {
 
         switch (type) {
             case "otp":
-                subject = "OTP Verification - LockMySeat";
+                subject = "OTP Verification - CineBook";
                 text = `Your OTP is: ${data.otp}`;
                 html = `
                     <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
-                        <h2 style="color: #fd5479; font-weight: bold;">LockMySeat</h2>
+                        <h2 style="color: #fd5479; font-weight: bold;">CineBook</h2>
                         <p>Hello,</p>
                         <p>Your One-Time Password (OTP) for registration is:</p>
                         <h2 style="color: #ffffff; font-weight: bold; letter-spacing: 5px; background-color: #242b33; display: inline-block; padding: 10px 20px; border-radius: 4px;">
@@ -31,35 +33,35 @@ const sendEmail = async (email, type, data) => {
                         <p>This OTP is valid for <strong>3 minutes</strong>.</p>
                         <p>If you did not request this, please ignore this email.</p>
                         <hr>
-                        <p>Best Regards, <br> <strong>LockMySeat Team</strong></p>
+                        <p>Best Regards, <br> <strong>CineBook Team</strong></p>
                     </div>
                 `;
                 break;
 
             case "reset":
-                subject = "Password Reset Request - LockMySeat";
+                subject = "Password Reset Request - CineBook";
                 text = `Click here to reset your password: ${data.resetUrl}`;
                 html = `
                     <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
-                        <h2 style="color: #fd5479; font-weight: bold;">LockMySeat</h2>
+                        <h2 style="color: #fd5479; font-weight: bold;">CineBook</h2>
                         <p>Hello,</p>
                         <p>You requested a password reset. Click the link below to reset your password:</p>
                         <a href="${data.resetUrl}" style="color: #fd5479; font-weight: bold; text-decoration: none;">Reset Password</a>
                         <p>This link is valid for <strong>10 minutes</strong>.</p>
                         <p>If you did not request this, please ignore this email.</p>
                         <hr>
-                        <p>Best Regards, <br> <strong>LockMySeat Team</strong></p>
+                        <p>Best Regards, <br> <strong>CineBook Team</strong></p>
                     </div>
                 `;
                 break;
 
             case "booking":
                 const { movieName, theaterName, location, showTime, showDate, selectedSeats, totalPrice, poster } = data;
-                subject = "Your Booking Confirmation - LockMySeat";
+                subject = "Your Booking Confirmation - CineBook";
                 text = `Your booking is confirmed! Movie: ${movieName}, Theater: ${theaterName}, Location: ${location}, Show Time: ${showTime}, Date: ${showDate}, Seats: ${selectedSeats.join(", ")}, Total Price: ₹${totalPrice}`;
                 html = `
                     <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
-                        <h2 style="color: #fd5479; font-weight: bold; text-align: center;">LockMySeat</h2>
+                        <h2 style="color: #fd5479; font-weight: bold; text-align: center;">CineBook</h2>
                         <h3 style="color: #242b33; text-align: center;">Booking Confirmation</h3>
                         <p>Hello,</p>
                         <p>Your booking has been successfully confirmed! Here are the details:</p>
@@ -75,7 +77,7 @@ const sendEmail = async (email, type, data) => {
                         </table>
                         <p style="text-align: center">Enjoy your movie!</p>
                         <hr>
-                        <p style="text-align: center">Best Regards, <br> <strong>LockMySeat Team</strong></p>
+                        <p style="text-align: center">Best Regards, <br> <strong>CineBook Team</strong></p>
                     </div>
                 `;
                 break;
@@ -84,8 +86,18 @@ const sendEmail = async (email, type, data) => {
                 throw new Error("Invalid email type");
         }
 
+        // If email credentials are obviously placeholders or we're in development, skip sending
+        const emailUser = process.env.EMAIL_USER || '';
+        const emailPass = process.env.EMAIL_PASS || '';
+        const looksLikePlaceholder = emailUser.includes('example') || emailPass.toLowerCase().includes('password');
+
+        if (NODE_ENV === 'development' || looksLikePlaceholder || process.env.SKIP_EMAIL_ON_DEV === 'true') {
+            console.log(`${type} email skipped (development or missing credentials). To enable, set valid EMAIL_USER and EMAIL_PASS.`);
+            return;
+        }
+
         await transporter.sendMail({
-            from: `"LockMySeat Support" <${process.env.EMAIL_USER}>`,
+            from: `"CineBook Support" <${process.env.EMAIL_USER}>`,
             to: email,
             subject,
             text,
@@ -95,6 +107,11 @@ const sendEmail = async (email, type, data) => {
         console.log(`${type} email sent successfully!`);
     } catch (error) {
         console.error(`Error sending ${type} email:`, error);
+        // In development, don't crash the request flow because email failed
+        if (NODE_ENV === 'development' || process.env.SKIP_EMAIL_ON_DEV === 'true') {
+            console.warn('Continuing without email delivery (development mode).');
+            return;
+        }
         throw error;
     }
 };

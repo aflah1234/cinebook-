@@ -51,6 +51,13 @@ const Register = ({ role = "user" }) => {
       setLoading(true);
       const response = await axiosInstance.post(user.registerAPI, payload);
 
+      // Check if OTP was skipped in development
+      if (response.data.message.includes("OTP skipped in development")) {
+        toast.success("Registration successful! You can now login.");
+        navigate(user.loginRoute);
+        return;
+      }
+
       if (response.data.message.includes("New OTP sent")) {
         toast.success("Account already exists but unverified. OTP sent!");
       } else {

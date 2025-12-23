@@ -4,7 +4,7 @@ const OwnerFooter = () => {
   return (
     <footer className="footer footer-center p-4 bg-base-200 text-gray-500">
       <div>
-        <p>© 2025 LockMySeat - All rights reserved</p>
+        <p>© 2025 CineBook - All rights reserved</p>
       </div>
     </footer>
   );

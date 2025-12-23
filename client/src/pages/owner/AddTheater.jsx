@@ -7,6 +7,7 @@ import { SubmitBtn } from '../../components/ui/Buttons.jsx';
 
 const AddTheater = () => {
   const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     location: '',
@@ -63,6 +64,7 @@ const AddTheater = () => {
 
       setFormData({ name: '', location: '', rows: '', cols: '' });
       setSeatPattern([]);
+      setMessage('');
     } catch (error) {
       toast.error(error.response?.data?.message || 'An error occurred. Please try again.');
       console.error('Error adding theater:', error);
@@ -129,6 +131,9 @@ const AddTheater = () => {
           >
             Generate Seating Pattern
           </button>
+          {message && (
+            <p className="text-red-500 text-sm mt-2">{message}</p>
+          )}
         </div>
 
         {/* Updated Seat Grid Display */}

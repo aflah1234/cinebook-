@@ -21,6 +21,16 @@ export const signup = async (req, res) => {
                 // If user exists but is not verified, update their details
                 user.name = name; // Ensure updated name
                 user.password = await bcrypt.hash(password, 10); // Update password
+                
+                // Skip OTP in development mode
+                if (NODE_ENV === 'development' && process.env.SKIP_OTP_IN_DEV === 'true') {
+                    user.isVerified = true;
+                    user.otp = null;
+                    user.otpExpires = null;
+                    await user.save();
+                    return res.json({ message: "Registration successful (OTP skipped in development)." });
+                }
+                
                 user.otp = Math.floor(100000 + Math.random() * 900000);
                 user.otpExpires = Date.now() + 3 * 60 * 1000;
 
@@ -34,6 +44,19 @@ export const signup = async (req, res) => {
 
         // Create a new user only if no existing record is found
         const hashedPassword = await bcrypt.hash(password, 10);
+        
+        // Skip OTP in development mode
+        if (NODE_ENV === 'development' && process.env.SKIP_OTP_IN_DEV === 'true') {
+            const newUser = new User({
+                name,
+                email,
+                password: hashedPassword,
+                isVerified: true
+            });
+            await newUser.save();
+            return res.json({ message: "Registration successful (OTP skipped in development)." });
+        }
+        
         const otp = Math.floor(100000 + Math.random() * 900000);
         const otpExpires = Date.now() + 4 * 60 * 1000;
 
@@ -151,8 +174,17 @@ export const login = async (req, res) => {
             return res.status(403).json({ message: "Sorry, your account has been deactivated by admin." });
         }
 
+        // Check if email is verified (skip in development mode)
         if (user.isVerified === false) {
-            return res.status(400).json({ message: "Please verify your email before logging in." });
+            // Skip OTP verification in development mode
+            if (NODE_ENV === 'development' && process.env.SKIP_OTP_IN_DEV === 'true') {
+                console.log('🚀 Development mode: Skipping email verification for login');
+                // Auto-verify the user in development
+                user.isVerified = true;
+                await user.save();
+            } else {
+                return res.status(400).json({ message: "Please verify your email before logging in." });
+            }
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
@@ -429,7 +461,7 @@ export const contact = async (req, res) => {
 
     const mailOptions = {
         from: email,
-        to: "lockmyseats@gmail.com",
+        to: "cinebook@gmail.com",
         subject: `New Contact Message from ${name}`,
         text: `You received a new message:\n\nName: ${name}\nEmail: ${email}\nMessage:\n${message}`,
     };

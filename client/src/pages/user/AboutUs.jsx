@@ -23,7 +23,7 @@ const AboutUs = () => {
         <div className="hero-content text-center text-neutral-content z-10">
           <div className="max-w-3xl">
             <h1 className="mb-4 text-4xl md:text-6xl font-extrabold tracking-tight">
-              Welcome to <span className="text-primary">LockMySeat</span>
+              Welcome to <span className="text-primary">CineBook</span>
             </h1>
             <p className="mb-6 text-lg md:text-2xl font-light max-w-2xl mx-auto">
               Your Ultimate Movie Ticket Booking Experience
@@ -42,10 +42,10 @@ const AboutUs = () => {
         <div className="container mx-auto px-4 py-26">
           <div className="text-center mb-20">
             <h2 className="text-3xl md:text-4xl font-semibold text-base-content">
-              Why Choose LockMySeat?
+              Why Choose CineBook?
             </h2>
             <p className="mt-4 text-lg text-base-content/80 max-w-3xl mx-auto">
-              At <span className="font-bold text-primary">LockMySeat</span>,
+              At <span className="font-bold text-primary">CineBook</span>,
               we’re dedicated to transforming how you experience movies. From
               blockbuster premieres to indie gems, we make booking your tickets
               effortless with real-time seat selection, exclusive deals, and a
@@ -107,7 +107,7 @@ const AboutUs = () => {
                 Our Commitment to Moviegoers
               </h3>
               <p className="text-base-content/80">
-                At <span className="font-bold text-primary">LockMySeat</span>,
+                At <span className="font-bold text-primary">CineBook</span>,
                 we believe in making every movie experience seamless and
                 memorable. From effortless ticket booking to exclusive deals,
                 we’re here to enhance your cinematic journey with just a few
@@ -125,7 +125,7 @@ const AboutUs = () => {
                 We’re not just about booking tickets; we’re about creating
                 experiences. Whether it's a first date, a family outing, or a
                 night out with friends,{" "}
-                <span className="font-bold text-primary">LockMySeat</span>{" "}
+                <span className="font-bold text-primary">CineBook</span>{" "}
                 ensures that your ticketing experience is quick, easy, and
                 reliable.
               </p>
@@ -180,7 +180,7 @@ const AboutUs = () => {
             </h3>
             <p className="text-base-content/80 mb-8 max-w-2xl mx-auto">
               Join thousands of movie lovers who trust{" "}
-              <span className="font-bold text-primary">LockMySeat</span> for
+              <span className="font-bold text-primary">CineBook</span> for
               unforgettable cinema experiences.
             </p>
             <button

@@ -41,7 +41,7 @@ const OwnerHeroSection = () => {
 
             {/* Subheading */}
             <p className="mb-8 text-lg md:text-xl text-base-content/80 font-light max-w-3xl mx-auto leading-relaxed">
-              Elevate your theater management with LockMySeat — register your venue, 
+              Elevate your theater management with CineBook— register your venue, 
               schedule shows effortlessly, track revenue in real-time, and maximize attendance.
             </p>
 

@@ -1,6 +1,6 @@
-# 🎬 LockMySeat – (Client)
+# 🎬 CineBook – (Client)
 
-This is the **React + Vite** frontend for **LockMySeat**, a sleek and responsive web application that lets users browse movies, view showtimes, select seats, and book movie tickets with ease.
+This is the **React + Vite** frontend for **CineBook**, a sleek and responsive web application that lets users browse movies, view showtimes, select seats, and book movie tickets with ease.
 
 ---
 
@@ -28,13 +28,16 @@ This is the **React + Vite** frontend for **LockMySeat**, a sleek and responsive
 | Framer-Motion    | For animations                        |
 | lucide-react     | For Icons                             |
 | react-hook-form  | For FormValidations and handling      |
+
+Note: For payments during development, set `VITE_RAZORPAY_KEY_ID` to a Razorpay test key (starts with `rzp_test_`).
+
 | react-hot-toast  | For toast messages                    |
 | sweetalert2      | For Styled alerts                     |
 | chart.js         | For Graph charts                      |
 
 ---
 
-lockmyseat-client/
+CineBook-client/
 ├── public/             # Static assets
 ├── src/
 │   ├── assets/         # Images and static media
@@ -49,6 +52,7 @@ lockmyseat-client/
 ├── .eslintrc.cjs       # Linting rules
 ├── index.html
 └── vite.config.js      # Vite configuration
+
 
 
 

@@ -1,7 +1,7 @@
-# 🎬 LockMySeat - Movie Ticket Booking Platform
+# 🎬 CineBook - Movie Ticket Booking Platform
 
 ## 🚀 Overview
-Welcome to **LockMySeat**, a cutting-edge full-stack web application that’s revolutionizing movie ticket bookings! 🌟 Designed for seamless user experiences, it features real-time seat selection, secure Razorpay payments, movie reviews, and powerful tools for theater owners to manage shows and track revenue. Dive into the cinematic world like never before! 🎥
+Welcome to **CineBook**, a cutting-edge full-stack web application that’s revolutionizing movie ticket bookings! 🌟 Designed for seamless user experiences, it features real-time seat selection, secure Razorpay payments, movie reviews, and powerful tools for theater owners to manage shows and track revenue. Dive into the cinematic world like never before! 🎥
 
 ---
 
@@ -145,11 +145,11 @@ Sign up with OTP verification, resend OTP, login, forgot password, and reset pas
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/Akash-S-010/LockMySeat_movie_ticket_booking.git
+   git clone https://github.com/Akash-S-010/CineBook_movie_ticket_booking.git
 
 2. Navigate to the project directory:
     ```bash
-   cd LockMySeat_movie_ticket_booking
+   cd CineBook_movie_ticket_booking
 
 3. Install the dependencies:
     ```bash
@@ -254,7 +254,7 @@ This project is licensed under the **MIT License** - see the [LICENSE.md](LICENS
 ## 📧 Contact
 Got questions or feedback? Reach out:  
 - Email: akashspalloor@example.com  
-- Issues: Open a ticket [here](https://github.com/Akash-S-010/LockMySeat_movie_ticket_booking/issues)
+- Issues: Open a ticket [here](https://github.com/Akash-S-010/CineBook_movie_ticket_booking/issues)
 
 ---
 
@@ -263,5 +263,6 @@ Got questions or feedback? Reach out:
 
 ---
 
-### 🎉 Why LockMySeat?
-**LockMySeat** isn’t just an app—it’s your front-row ticket to a smarter, cooler movie experience! Whether you’re a movie buff or a theater owner, we bring style, innovation, and ease to every booking. 🌈
+### 🎉 Why CineBook?
+**CineBook** isn’t just an app—it’s your front-row ticket to a smarter, cooler movie experience! Whether you’re a movie buff or a theater owner, we bring style, innovation, and ease to every booking. 🌈
+

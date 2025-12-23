@@ -4,6 +4,16 @@ import axiosInstance from "../../config/axiosInstance.js";
 import { Button } from "../../components/ui/Buttons";
 import toast from "react-hot-toast";
 
+// Force cache refresh in development
+if (import.meta.env.VITE_SKIP_RAZORPAY === 'true') {
+  console.log('🔄 Payment component loaded in MOCK MODE');
+  console.log('Environment check:', {
+    VITE_SKIP_RAZORPAY: import.meta.env.VITE_SKIP_RAZORPAY,
+    VITE_FORCE_MOCK_PAYMENT: import.meta.env.VITE_FORCE_MOCK_PAYMENT,
+    VITE_RAZORPAY_KEY_ID: import.meta.env.VITE_RAZORPAY_KEY_ID
+  });
+}
+
 const Payment = () => {
   const { showId } = useParams();
   const { state } = useLocation();
@@ -27,11 +37,33 @@ const Payment = () => {
       toast.error("Invalid payment details.");
       navigate(`/user/seat-selection/${showId}`);
     }
+
+    // Force cache refresh in development mode
+    if (import.meta.env.VITE_SKIP_RAZORPAY === 'true') {
+      console.log('🔄 Development mode active - mock payments enabled');
+      console.log('Environment variables:', {
+        VITE_SKIP_RAZORPAY: import.meta.env.VITE_SKIP_RAZORPAY,
+        VITE_FORCE_MOCK_PAYMENT: import.meta.env.VITE_FORCE_MOCK_PAYMENT,
+        VITE_RAZORPAY_KEY_ID: import.meta.env.VITE_RAZORPAY_KEY_ID
+      });
+    }
   }, [selectedSeats, totalPrice, bookingId, navigate, showId]);
 
-  // Load Razorpay script dynamically
+  // Load Razorpay script dynamically (only if not in mock mode)
   const loadRazorpayScript = () => {
     return new Promise((resolve) => {
+      // Always skip loading Razorpay script in development mode
+      const isDevMode = import.meta.env.VITE_SKIP_RAZORPAY === 'true' || 
+                        import.meta.env.VITE_FORCE_MOCK_PAYMENT === 'true' ||
+                        import.meta.env.VITE_RAZORPAY_KEY_ID === 'DISABLED_IN_DEV' ||
+                        import.meta.env.VITE_RAZORPAY_KEY_ID === 'MOCK_DEV_KEY';
+      
+      if (isDevMode) {
+        console.log('🚫 Razorpay script loading blocked in development mode');
+        resolve(false);
+        return;
+      }
+      
       const script = document.createElement("script");
       script.src = "https://checkout.razorpay.com/v1/checkout.js";
       script.onload = () => resolve(true);
@@ -44,26 +76,108 @@ const Payment = () => {
   const handlePayment = async () => {
     setLoading(true);
 
-    const scriptLoaded = await loadRazorpayScript();
-    if (!scriptLoaded) {
-      toast.error("Failed to load Razorpay SDK. Check your network.");
-      setLoading(false);
-      return;
+    // Force mock mode in development - check multiple environment variables
+    const isDevMode = import.meta.env.VITE_SKIP_RAZORPAY === 'true' || 
+                      import.meta.env.VITE_FORCE_MOCK_PAYMENT === 'true' ||
+                      import.meta.env.VITE_RAZORPAY_KEY_ID === 'DISABLED_IN_DEV' ||
+                      import.meta.env.VITE_RAZORPAY_KEY_ID === 'MOCK_DEV_KEY';
+    
+    if (isDevMode) {
+      console.log('🚀 Development mode detected - using mock payment flow');
+      toast.success("Processing payment... (Mock mode)");
+      
+      try {
+        const response = await axiosInstance.post("/payment/createOrder", {
+          amount: totalPrice,
+          bookingId,
+        });
+
+        const { order_id } = response.data;
+        console.log('✅ Mock payment order created:', order_id);
+
+        // Simulate payment processing delay
+        setTimeout(async () => {
+          try {
+            const verificationResponse = await axiosInstance.post(
+              "/payment/paymentVerification",
+              {
+                razorpay_order_id: order_id,
+                razorpay_payment_id: `mock_payment_${Date.now()}`,
+                razorpay_signature: `mock_signature_${Date.now()}`,
+                bookingId,
+              }
+            );
+            console.log('✅ Mock payment verification successful');
+            toast.success("Payment successful! (Mock mode)");
+            navigate("/user/payment-success");
+          } catch (error) {
+            console.error('❌ Mock payment verification failed:', error);
+            toast.error("Payment verification failed.");
+            navigate("/user/payment-failed");
+          }
+          setLoading(false);
+        }, 2000);
+        
+        return;
+      } catch (error) {
+        console.error('❌ Mock payment creation failed:', error);
+        toast.error("Failed to create mock payment.");
+        setLoading(false);
+        return;
+      }
     }
 
+    // Real Razorpay flow (only for production)
+    console.log('🔄 Production mode - using real Razorpay');
     try {
       const response = await axiosInstance.post("/payment/createOrder", {
         amount: totalPrice,
         bookingId,
       });
 
-      const { order_id, amount, currency } = response.data;
+      const { order_id, amount, currency, mock } = response.data;
+
+      // Double-check for mock mode from server response
+      if (mock) {
+        console.log('🚀 Server returned mock payment - processing mock flow');
+        toast.success("Processing payment... (Mock mode)");
+        
+        setTimeout(async () => {
+          try {
+            const verificationResponse = await axiosInstance.post(
+              "/payment/paymentVerification",
+              {
+                razorpay_order_id: order_id,
+                razorpay_payment_id: `mock_payment_${Date.now()}`,
+                razorpay_signature: `mock_signature_${Date.now()}`,
+                bookingId,
+              }
+            );
+            toast.success("Payment successful! (Mock mode)");
+            navigate("/user/payment-success");
+          } catch (error) {
+            toast.error("Payment verification failed.");
+            navigate("/user/payment-failed");
+          }
+          setLoading(false);
+        }, 2000);
+        
+        return;
+      }
+
+      // Real Razorpay flow (only if keys are valid and not in dev mode)
+      const scriptLoaded = await loadRazorpayScript();
+      if (!scriptLoaded) {
+        toast.error("Failed to load Razorpay SDK. Check your network.");
+        setLoading(false);
+        return;
+      }
 
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
         amount: amount,
         currency: currency,
-        name: "LockMySeat",
+        name: "CineBook",
         description: `Payment for Booking ID: ${bookingId}`,
         order_id: order_id,
         handler: async (response) => {
@@ -78,11 +192,9 @@ const Payment = () => {
               }
             );
             toast.success(verificationResponse.data.message);
-            // Redirect to success page with booking details (absolute path)
-            navigate("/user/payment-success")
+            navigate("/user/payment-success");
           } catch (error) {
             toast.error("Payment verification failed.");
-            // Redirect to failure page (absolute path)
             navigate("/user/payment-failed");
           }
         },
@@ -97,14 +209,12 @@ const Payment = () => {
       const paymentObject = new window.Razorpay(options);
       paymentObject.on("payment.failed", () => {
         toast.error("Payment failed. Please try again.");
-        // Redirect to failure page (absolute path)
         navigate("/user/payment-failed");
         setLoading(false);
       });
       paymentObject.open();
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to initiate payment.");
-      // Redirect to failure page (absolute path)
       navigate("/user/payment-failed");
       setLoading(false);
     }
@@ -123,6 +233,11 @@ const Payment = () => {
         {/* Header */}
         <h1 className="text-3xl font-bold base mb-6 text-center text-primary">
           Summary
+          {import.meta.env.VITE_SKIP_RAZORPAY === 'true' && (
+            <div className="text-sm text-yellow-500 font-normal mt-1">
+              🚀 Development Mode - Mock Payments
+            </div>
+          )}
         </h1>
 
         {/* Movie Poster and Title */}
@@ -185,7 +300,11 @@ const Payment = () => {
 
         {/* Payment Button */}
         <Button
-          title={`Proceed to Pay ₹ ${totalPrice}`}
+          title={
+            import.meta.env.VITE_SKIP_RAZORPAY === 'true' 
+              ? `Mock Pay ₹${totalPrice} (Dev Mode)` 
+              : `Proceed to Pay ₹${totalPrice}`
+          }
           onClick={handlePayment}
           loading={loading}
           disabled={loading}
