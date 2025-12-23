@@ -145,11 +145,11 @@ Sign up with OTP verification, resend OTP, login, forgot password, and reset pas
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/aflah1234/cinebook--frontend.git
+   git clone https://github.com/aflah1234/cinebook-.git
 
 2. Navigate to the project directory:
     ```bash
-   cd cinebook--frontend
+   cd cinebook-
 
 3. Install the dependencies:
     ```bash
@@ -256,14 +256,14 @@ This project is licensed under the **MIT License** - see the [LICENSE.md](LICENS
 **Aflah**
 - GitHub: [@aflah1234](https://github.com/aflah1234)
 - Email: aflah1234@gmail.com
-- Project: [CineBook - Movie Ticket Booking Platform](https://github.com/aflah1234/cinebook--frontend)
+- Project: [CineBook - Movie Ticket Booking Platform](https://github.com/aflah1234/cinebook-)
 
 ---
 
 ## 📧 Contact
 Got questions or feedback? Reach out:  
 - Email: aflah1234@gmail.com  
-- Issues: Open a ticket [here](https://github.com/aflah1234/cinebook--frontend/issues)
+- Issues: Open a ticket [here](https://github.com/aflah1234/cinebook-/issues)
 
 ---
 
