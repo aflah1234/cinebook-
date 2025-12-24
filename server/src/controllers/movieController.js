@@ -102,7 +102,7 @@ export const getAllMovies = async (req, res) => {
       .skip(parseInt(skip));
 
     if (!movies || movies.length === 0) {
-      return res.status(404).json({ message: "No movies found" });
+      return res.status(200).json({ message: "No movies found", data: [] });
     }
 
     const formattedMovies = movies.map((movie) => ({

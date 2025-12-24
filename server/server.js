@@ -21,11 +21,14 @@ app.use(cors({
             "https://cinebookproject.netlify.app",
             "https://cinebook.vercel.app",
             "https://cinebook-frontend.vercel.app",
+            "https://cinebook-frontend-git-main.vercel.app",
+            "https://cinebook-frontend-omega.vercel.app",
             process.env.FRONTEND_URL
           ].filter(Boolean)
         : [
             "http://localhost:3000", 
             "http://localhost:5000", 
+            "http://localhost:5001", 
             "http://localhost:5002", 
             "http://localhost:5173", 
             "http://localhost:5174",
