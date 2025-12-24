@@ -115,6 +115,36 @@ app.get("/auth-test", (req, res) => {
         hasToken: !!token,
         tokenPreview: token ? token.substring(0, 20) + "..." : null,
         cookies: Object.keys(req.cookies),
+        allCookies: req.cookies,
+        headers: {
+            origin: req.get('origin'),
+            userAgent: req.get('user-agent')?.substring(0, 50),
+            cookie: req.get('cookie')?.substring(0, 100)
+        },
+        timestamp: new Date().toISOString()
+    });
+});
+
+// Payment debug endpoint
+app.get("/api/payment/debug", (req, res) => {
+    const token = req.cookies.token;
+    res.json({
+        message: "Payment debug endpoint",
+        authentication: {
+            hasToken: !!token,
+            tokenPreview: token ? token.substring(0, 20) + "..." : null,
+            cookies: Object.keys(req.cookies),
+            allCookies: req.cookies
+        },
+        request: {
+            origin: req.get('origin'),
+            userAgent: req.get('user-agent')?.substring(0, 50),
+            cookie: req.get('cookie')
+        },
+        environment: {
+            nodeEnv: process.env.NODE_ENV,
+            frontendUrl: process.env.FRONTEND_URL
+        },
         timestamp: new Date().toISOString()
     });
 });

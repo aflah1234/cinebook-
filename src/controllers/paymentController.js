@@ -46,6 +46,16 @@ const razorpay = new Razorpay({
 
 export const createOrder = async (req, res) => {
     const { amount, bookingId } = req.body;
+    
+    // Debug authentication
+    console.log('🔍 Payment createOrder - Auth debug:', {
+        hasUser: !!req.user,
+        userId: req.user?.userId,
+        cookies: Object.keys(req.cookies),
+        hasToken: !!req.cookies.token,
+        origin: req.get('origin')
+    });
+    
     const userId = req.user.userId;
 
     try {
