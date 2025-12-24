@@ -18,73 +18,30 @@ export const signup = async (req, res) => {
 
         if (user) {
             if (!user.isVerified) {
-                // If user exists but is not verified, update their details
-                user.name = name; // Ensure updated name
-                user.password = await bcrypt.hash(password, 10); // Update password
-                
-                // Skip OTP in development mode
-                if (NODE_ENV === 'development' && process.env.SKIP_OTP_IN_DEV === 'true') {
-                    user.isVerified = true;
-                    user.otp = null;
-                    user.otpExpires = null;
-                    await user.save();
-                    return res.json({ message: "Registration successful (OTP skipped in development)." });
-                }
-                
-                user.otp = Math.floor(100000 + Math.random() * 900000);
-                user.otpExpires = Date.now() + 3 * 60 * 1000;
-
+                // If user exists but is not verified, update their details and verify them
+                user.name = name;
+                user.password = await bcrypt.hash(password, 10);
+                user.isVerified = true;
+                user.otp = null;
+                user.otpExpires = null;
                 await user.save();
-                await sendEmail(email, "otp", {otp:user.otp});
-
-                return res.json({ message: "New OTP sent to your email." });
+                return res.json({ message: "Registration successful (OTP verification skipped)." });
             }
-            return res.status(400).json({ message: "User already exists" });
+            return res.status(400).json({ message: "User already exists and is verified" });
         }
 
-        // Create a new user only if no existing record is found
+        // Create a new user - always skip OTP verification
         const hashedPassword = await bcrypt.hash(password, 10);
         
-        // Skip OTP in development mode or if email is disabled
-        if (NODE_ENV === 'development' && process.env.SKIP_OTP_IN_DEV === 'true') {
-            const newUser = new User({
-                name,
-                email,
-                password: hashedPassword,
-                isVerified: true
-            });
-            await newUser.save();
-            return res.json({ message: "Registration successful (OTP skipped in development)." });
-        }
-        
-        // For production, also skip OTP if email is disabled
-        if (process.env.SKIP_EMAIL_ON_DEV === 'true') {
-            const newUser = new User({
-                name,
-                email,
-                password: hashedPassword,
-                isVerified: true
-            });
-            await newUser.save();
-            return res.json({ message: "Registration successful (Email verification disabled)." });
-        }
-        
-        const otp = Math.floor(100000 + Math.random() * 900000);
-        const otpExpires = Date.now() + 4 * 60 * 1000;
-
         const newUser = new User({
             name,
             email,
             password: hashedPassword,
-            otp,
-            otpExpires,
-            isVerified: false
+            isVerified: true // Always set to true to skip OTP
         });
+        
         await newUser.save();
-
-        await sendEmail(email, "otp", { otp });
-
-        res.json({ message: "OTP sent to your email. Please verify to complete registration." });
+        return res.json({ message: "Registration successful (OTP verification skipped)." });
 
     } catch (error) {
         console.error("Error in signup:", error);
@@ -120,12 +77,10 @@ export const signup = async (req, res) => {
 
 
 
-// ------------otp verification------------
+// ------------otp verification (SKIPPED)------------
 export const verifyOTP = async (req, res) => {
-
     try {
-
-        const { email, otp } = req.body;
+        const { email } = req.body;
 
         const user = await User.findOne({ email });
 
@@ -133,21 +88,17 @@ export const verifyOTP = async (req, res) => {
             return res.status(400).json({ message: "User not found" });
         }
 
-        if (user.otp !== otp || Date.now() > user.otpExpires) {
-            return res.status(400).json({ message: "Invalid or expired OTP" });
-        }
-
-        // OTP verified, finalize registration
+        // Always verify the user (skip OTP check)
         user.isVerified = true;
         user.otp = null;
         user.otpExpires = null;
         await user.save();
 
-        res.json({ message: "Registration successful." });
+        res.json({ message: "Registration successful (OTP verification skipped)." });
 
     } catch (error) {
         console.error("Error in verifying OTP", error);
-        res.status(error.statusCode || 500).json({ message: error.message || "Internal server error" }); F
+        res.status(error.statusCode || 500).json({ message: error.message || "Internal server error" });
     }
 };
 
@@ -169,18 +120,13 @@ export const resendOTP = async (req, res) => {
             return res.status(400).json({ message: "User is already verified." });
         }
 
-        // ---------Generate new OTP------------
-        const otp = Math.floor(100000 + Math.random() * 900000);
-        const otpExpires = Date.now() + 4 * 60 * 1000; // Set an expiration time of 4 minutes
-
-        user.otp = otp;
-        user.otpExpires = otpExpires;
+        // Auto-verify the user (skip OTP resend)
+        user.isVerified = true;
+        user.otp = null;
+        user.otpExpires = null;
         await user.save();
 
-        // -----------Send OTP via email-----------
-        await sendEmail(email, "otp", {otp});
-
-        res.json({ message: "New OTP sent to your email." });
+        res.json({ message: "User verified successfully (OTP verification skipped)." });
 
     } catch (error) {
         console.error("Error in resending OTP", error);
@@ -210,17 +156,12 @@ export const login = async (req, res) => {
             return res.status(403).json({ message: "Sorry, your account has been deactivated by admin." });
         }
 
-        // Check if email is verified (skip in development mode)
+        // Check if email is verified (always skip verification)
         if (user.isVerified === false) {
-            // Skip OTP verification in development mode
-            if (NODE_ENV === 'development' && process.env.SKIP_OTP_IN_DEV === 'true') {
-                console.log('🚀 Development mode: Skipping email verification for login');
-                // Auto-verify the user in development
-                user.isVerified = true;
-                await user.save();
-            } else {
-                return res.status(400).json({ message: "Please verify your email before logging in." });
-            }
+            // Auto-verify the user (skip OTP verification)
+            console.log('🚀 Auto-verifying user: Skipping email verification');
+            user.isVerified = true;
+            await user.save();
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
