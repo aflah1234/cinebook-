@@ -23,6 +23,8 @@ app.use(cors({
             "https://cinebook-frontend.vercel.app",
             "https://cinebook-frontend-git-main.vercel.app",
             "https://cinebook-frontend-omega.vercel.app",
+            "https://cinebook-liard.vercel.app",
+            "https://cinebook-liard-git-main.vercel.app",
             process.env.FRONTEND_URL
           ].filter(Boolean)
         : [
