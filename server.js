@@ -82,6 +82,17 @@ app.get("/health", async (req, res) => {
     }
 });
 
+// Auth test endpoint
+app.get("/auth-test", (req, res) => {
+    const token = req.cookies.token;
+    res.json({
+        hasToken: !!token,
+        tokenPreview: token ? token.substring(0, 20) + "..." : null,
+        cookies: Object.keys(req.cookies),
+        timestamp: new Date().toISOString()
+    });
+});
+
 app.use('/api', apiRoutes)
 app.all("*", (req, res) => res.status(404).json({ message: "Route not found" }));
 

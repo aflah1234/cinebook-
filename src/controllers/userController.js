@@ -14,6 +14,21 @@ export const signup = async (req, res) => {
     try {
         const { name, email, password } = req.body;
 
+        // Basic validation
+        if (!name || !email || !password) {
+            return res.status(400).json({ message: "Name, email, and password are required" });
+        }
+
+        if (password.length < 6) {
+            return res.status(400).json({ message: "Password must be at least 6 characters long" });
+        }
+
+        // Email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ message: "Please enter a valid email address" });
+        }
+
         let user = await User.findOne({ email });
 
         if (user) {
@@ -173,14 +188,29 @@ export const login = async (req, res) => {
         // Generate Token---------
         const token = generateToken(user._id);
 
-        res.cookie("token", token, {
+        // Cookie settings for production deployment
+        const cookieOptions = {
+            httpOnly: true,
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
             sameSite: NODE_ENV === "production" ? "None" : "Lax",
             secure: NODE_ENV === "production",
-            httpOnly: true,
-            maxAge: 7 * 24 * 60 * 60 * 1000,
-        });
+            path: "/"
+        };
 
-        res.status(200).json({ message: "Login successful", data: { _id: user._id, name: user.name, email: user.email, profilePic: user.profilePic } });
+        res.cookie("token", token, cookieOptions);
+
+        console.log('✅ User logged in successfully:', user.email);
+        console.log('🍪 Cookie set with options:', cookieOptions);
+
+        res.status(200).json({ 
+            message: "Login successful", 
+            data: { 
+                _id: user._id, 
+                name: user.name, 
+                email: user.email, 
+                profilePic: user.profilePic 
+            } 
+        });
 
     } catch (error) {
         console.error("Error in login", error);

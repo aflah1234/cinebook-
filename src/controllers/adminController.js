@@ -16,115 +16,117 @@ export const signup = async (req, res) => {
     try {
         const { name, email, password, role } = req.body;
 
+        // Basic validation
+        if (!name || !email || !password || !role) {
+            return res.status(400).json({ message: "Name, email, password, and role are required" });
+        }
+
+        if (password.length < 6) {
+            return res.status(400).json({ message: "Password must be at least 6 characters long" });
+        }
+
+        // Email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ message: "Please enter a valid email address" });
+        }
+
         if (!['admin', 'theaterOwner'].includes(role)) {
-            return res.status(400).json({ message: "Invalid role" });
+            return res.status(400).json({ message: "Invalid role. Must be 'admin' or 'theaterOwner'" });
         }        
 
         let admin = await Admin.findOne({ email });
 
         if (admin) {
             if (!admin.isVerified) {
-                // If user exists but is not verified, update their details
-                admin.name = name; // Ensure updated name
-                admin.password = await bcrypt.hash(password, 10); // Update password
-                
-                // Skip OTP in development mode
-                if (NODE_ENV === 'development' && process.env.SKIP_OTP_IN_DEV === 'true') {
-                    admin.isVerified = true;
-                    admin.otp = null;
-                    admin.otpExpires = null;
-                    await admin.save();
-                    return res.json({ message: "Registration successful (OTP skipped in development)." });
-                }
-                
-                admin.otp = Math.floor(100000 + Math.random() * 900000);
-                admin.otpExpires = Date.now() + 3 * 60 * 1000;
-
+                // If user exists but is not verified, update their details and verify them
+                admin.name = name;
+                admin.password = await bcrypt.hash(password, 10);
+                admin.role = role;
+                admin.isVerified = true;
+                admin.otp = null;
+                admin.otpExpires = null;
                 await admin.save();
-                await sendEmail(email, "otp", admin.otp);
-
-                return res.json({ message: "New OTP sent to your email." });
+                return res.json({ message: "Registration successful (OTP verification skipped)." });
             }
-            return res.status(400).json({ message: "Admin already exists" });
+            return res.status(400).json({ message: "Admin already exists and is verified" });
         }
 
-        // Create a new user only if no existing record is found
+        // Create a new admin - always skip OTP verification
         const hashedPassword = await bcrypt.hash(password, 10);
         
-        // Skip OTP in development mode
-        if (NODE_ENV === 'development' && process.env.SKIP_OTP_IN_DEV === 'true') {
-            const newAdmin = new Admin({
-                name,
-                email,
-                password: hashedPassword,
-                role,
-                isVerified: true
-            });
-            await newAdmin.save();
-            return res.json({ message: "Registration successful (OTP skipped in development)." });
-        }
-        
-        const otp = Math.floor(100000 + Math.random() * 900000);
-        const otpExpires = Date.now() + 4 * 60 * 1000;
-
         const newAdmin = new Admin({
             name,
             email,
             password: hashedPassword,
-            otp,
             role,
-            otpExpires,
-            isVerified: false
+            isVerified: true // Always set to true to skip OTP
         });
+        
         await newAdmin.save();
-
-        await sendEmail(email, "otp", { otp });
-
-        res.json({ message: "OTP sent to your email. Please verify to complete registration." });
+        return res.json({ message: "Registration successful (OTP verification skipped)." });
 
     } catch (error) {
-        console.error("Error in signup", error);
-        res.status(500).json({ message: "Internal server error" });
+        console.error("Error in admin signup:", error);
+        
+        // More detailed error handling
+        if (error.name === 'ValidationError') {
+            return res.status(400).json({ 
+                message: "Validation error", 
+                details: error.message 
+            });
+        }
+        
+        if (error.code === 11000) {
+            return res.status(400).json({ 
+                message: "Email already exists" 
+            });
+        }
+        
+        if (error.name === 'MongoNetworkError' || error.name === 'MongooseServerSelectionError') {
+            return res.status(503).json({ 
+                message: "Database connection error" 
+            });
+        }
+        
+        res.status(500).json({ 
+            message: "Internal server error",
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
     }
 };
 
 
 
-// ------------otp verification------------
+// ------------otp verification (SKIPPED)------------
 export const verifyOTP = async (req, res) => {
-    
     try {
-        
-        const { email, otp } = req.body;
+        const { email } = req.body;
 
         const admin = await Admin.findOne({ email });
 
         if (!admin) {
-            return res.status(400).json({ message: "admin not found" });
+            return res.status(400).json({ message: "Admin not found" });
         }
 
-        if(admin.otp !== otp || Date.now() > admin.otpExpires){
-            return res.status(400).json({ message: "Invalid or expired OTP" });
-        }
-
-        // OTP verified, finalize registration
+        // Always verify the admin (skip OTP check)
         admin.isVerified = true;
         admin.otp = null;
         admin.otpExpires = null;
         await admin.save();
 
-        res.json({ message: "Registration successful." });
+        res.json({ message: "Registration successful (OTP verification skipped)." });
 
     } catch (error) {
-        console.error("Error in verifying OTP",error);
-        res.status(error.statusCode || 500).json({ message: error.message || "Internal server error" });F
+        console.error("Error in verifying OTP", error);
+        res.status(error.statusCode || 500).json({ message: error.message || "Internal server error" });
     }
 };
 
 
 
 
-// -----------Resent OTP------------
+// -----------Resent OTP (SKIPPED)------------
 export const resendOTP = async (req, res) => {
     try {
         const { email } = req.body;
@@ -132,25 +134,20 @@ export const resendOTP = async (req, res) => {
         const admin = await Admin.findOne({ email });
 
         if (!admin) {
-            return res.status(400).json({ message: "admin not found" });
+            return res.status(400).json({ message: "Admin not found" });
         }
 
         if (admin.isVerified) {
-            return res.status(400).json({ message: "admin is already verified." });
+            return res.status(400).json({ message: "Admin is already verified." });
         }
 
-        // ---------Generate new OTP------------
-        const otp = Math.floor(100000 + Math.random() * 900000);
-        const otpExpires = Date.now() + 4 * 60 * 1000; // Set expiration time
-
-        admin.otp = otp;
-        admin.otpExpires = otpExpires;
+        // Auto-verify the admin (skip OTP resend)
+        admin.isVerified = true;
+        admin.otp = null;
+        admin.otpExpires = null;
         await admin.save();
 
-        // -----------Send OTP via email-----------
-        await sendEmail(email, "otp", {otp});
-
-        res.json({ message: "New OTP sent to your email." });
+        res.json({ message: "Admin verified successfully (OTP verification skipped)." });
 
     } catch (error) {
         console.error("Error in resending OTP", error);
@@ -176,7 +173,10 @@ export const login = async (req, res) => {
         }
 
         if (admin.isVerified === false) {
-            return res.status(400).json({ message: "Please verify your email before logging in." });
+            // Auto-verify the admin (skip OTP verification)
+            console.log('🚀 Auto-verifying admin: Skipping email verification');
+            admin.isVerified = true;
+            await admin.save();
         }
 
         const isMatch = await bcrypt.compare(password, admin.password);
@@ -188,14 +188,30 @@ export const login = async (req, res) => {
         // Generate Token----------
         const token = generateToken(admin._id, admin.role);
 
-        res.cookie("token", token, {
+        // Cookie settings for production deployment
+        const cookieOptions = {
+            httpOnly: true,
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
             sameSite: NODE_ENV === "production" ? "None" : "Lax",
             secure: NODE_ENV === "production",
-            httpOnly: true,
-            maxAge: 7 * 24 * 60 * 60 * 1000,
-        });
+            path: "/"
+        };
 
-        res.status(200).json({ message: "Login successful",data: {_id: admin._id, name: admin.name, email: admin.email, role: admin.role, profilePic: admin.profilePic} });
+        res.cookie("token", token, cookieOptions);
+
+        console.log('✅ Admin logged in successfully:', admin.email);
+        console.log('🍪 Cookie set with options:', cookieOptions);
+
+        res.status(200).json({ 
+            message: "Login successful",
+            data: {
+                _id: admin._id, 
+                name: admin.name, 
+                email: admin.email, 
+                role: admin.role, 
+                profilePic: admin.profilePic
+            } 
+        });
 
     } catch (error) {
      console.error("Error in login",error);
