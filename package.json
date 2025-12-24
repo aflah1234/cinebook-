@@ -8,6 +8,9 @@
     "dev-simple": "node server.js",
     "start": "node server.js",
     "build": "npm install",
+    "seed": "node scripts/seedMovies.js",
+    "seed-users": "node scripts/seedUsers.js",
+    "seed-all": "node scripts/seedUsers.js && node scripts/seedMovies.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
