@@ -4,6 +4,15 @@ import jwt from "jsonwebtoken";
 const checkAuth = (req, res, next) => {
     try {
         const token = req.cookies.token;
+        
+        // Debug logging for production
+        console.log('🔍 Auth check - Request details:', {
+            origin: req.get('origin'),
+            userAgent: req.get('user-agent')?.substring(0, 50),
+            cookies: Object.keys(req.cookies),
+            hasToken: !!token,
+            tokenPreview: token ? token.substring(0, 20) + "..." : null
+        });
 
         if (!token) {
             console.log('❌ No token found in cookies');
@@ -11,7 +20,8 @@ const checkAuth = (req, res, next) => {
                 message: "Unauthorized - No token provided",
                 debug: process.env.NODE_ENV === 'development' ? {
                     cookies: Object.keys(req.cookies),
-                    hasToken: false
+                    hasToken: false,
+                    allCookies: req.cookies
                 } : undefined
             });
         }

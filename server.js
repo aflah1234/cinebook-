@@ -16,18 +16,44 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
     origin: process.env.NODE_ENV === 'production' 
-        ? [
-            "https://cinebook.netlify.app",
-            "https://cinebook-frontend.netlify.app", 
-            "https://cinebookproject.netlify.app",
-            "https://cinebook.vercel.app",
-            "https://cinebook-frontend.vercel.app",
-            "https://cinebook-frontend-git-main.vercel.app",
-            "https://cinebook-frontend-omega.vercel.app",
-            "https://cinebook-liard.vercel.app",
-            "https://cinebook-liard-git-main.vercel.app",
-            process.env.FRONTEND_URL
-          ].filter(Boolean)
+        ? (origin, callback) => {
+            // Allow requests with no origin (like mobile apps or curl requests)
+            if (!origin) return callback(null, true);
+            
+            // List of allowed origins
+            const allowedOrigins = [
+                "https://cinebook.netlify.app",
+                "https://cinebook-frontend.netlify.app", 
+                "https://cinebookproject.netlify.app",
+                "https://cinebook.vercel.app",
+                "https://cinebook-frontend.vercel.app",
+                "https://cinebook-frontend-git-main.vercel.app",
+                "https://cinebook-frontend-omega.vercel.app",
+                "https://cinebook-liard.vercel.app",
+                "https://cinebook-liard-git-main.vercel.app",
+                "https://cinebook-odkfmv4kt-aflahs-projects-f84feba8.vercel.app",
+                process.env.FRONTEND_URL
+            ].filter(Boolean);
+            
+            // Check if origin is in allowed list
+            if (allowedOrigins.includes(origin)) {
+                return callback(null, true);
+            }
+            
+            // Allow Vercel preview deployments (any subdomain of vercel.app)
+            if (origin.match(/^https:\/\/.*\.vercel\.app$/)) {
+                return callback(null, true);
+            }
+            
+            // Allow any cinebook-related Vercel deployment
+            if (origin.match(/^https:\/\/cinebook.*\.vercel\.app$/)) {
+                return callback(null, true);
+            }
+            
+            // Reject other origins
+            const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+            return callback(new Error(msg), false);
+        }
         : [
             "http://localhost:3000", 
             "http://localhost:5000", 

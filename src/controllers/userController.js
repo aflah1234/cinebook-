@@ -194,13 +194,16 @@ export const login = async (req, res) => {
             maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
             sameSite: NODE_ENV === "production" ? "None" : "Lax",
             secure: NODE_ENV === "production",
-            path: "/"
+            path: "/",
+            domain: NODE_ENV === "production" ? undefined : undefined // Let browser handle domain
         };
 
         res.cookie("token", token, cookieOptions);
 
         console.log('✅ User logged in successfully:', user.email);
         console.log('🍪 Cookie set with options:', cookieOptions);
+        console.log('🌐 NODE_ENV:', NODE_ENV);
+        console.log('🔗 Request origin:', req.get('origin'));
 
         res.status(200).json({ 
             message: "Login successful", 
