@@ -45,7 +45,7 @@ export const signup = async (req, res) => {
         // Create a new user only if no existing record is found
         const hashedPassword = await bcrypt.hash(password, 10);
         
-        // Skip OTP in development mode
+        // Skip OTP in development mode or if email is disabled
         if (NODE_ENV === 'development' && process.env.SKIP_OTP_IN_DEV === 'true') {
             const newUser = new User({
                 name,
@@ -55,6 +55,18 @@ export const signup = async (req, res) => {
             });
             await newUser.save();
             return res.json({ message: "Registration successful (OTP skipped in development)." });
+        }
+        
+        // For production, also skip OTP if email is disabled
+        if (process.env.SKIP_EMAIL_ON_DEV === 'true') {
+            const newUser = new User({
+                name,
+                email,
+                password: hashedPassword,
+                isVerified: true
+            });
+            await newUser.save();
+            return res.json({ message: "Registration successful (Email verification disabled)." });
         }
         
         const otp = Math.floor(100000 + Math.random() * 900000);
@@ -75,8 +87,32 @@ export const signup = async (req, res) => {
         res.json({ message: "OTP sent to your email. Please verify to complete registration." });
 
     } catch (error) {
-        console.error("Error in signup", error.message);
-        res.status(500).json({ message: "Internal server error" });
+        console.error("Error in signup:", error);
+        
+        // More detailed error handling
+        if (error.name === 'ValidationError') {
+            return res.status(400).json({ 
+                message: "Validation error", 
+                details: error.message 
+            });
+        }
+        
+        if (error.code === 11000) {
+            return res.status(400).json({ 
+                message: "Email already exists" 
+            });
+        }
+        
+        if (error.name === 'MongoNetworkError' || error.name === 'MongooseServerSelectionError') {
+            return res.status(503).json({ 
+                message: "Database connection error" 
+            });
+        }
+        
+        res.status(500).json({ 
+            message: "Internal server error",
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
     }
 };
 

@@ -4,6 +4,7 @@ import connectDB from "./src/config/db.js";
 import cookieParser from "cookie-parser";
 import apiRoutes from "./src/routes/index.js";
 import cors from "cors"
+import mongoose from "mongoose";
 
 dotenv.config();
 const PORT = process.env.PORT || 5000;
@@ -44,6 +45,41 @@ app.use(cors({
 
 app.get("/", (req, res) => {
     res.send("Hello Welcome To CineBook");
+});
+
+// Debug endpoint for Vercel
+app.get("/debug", (req, res) => {
+    res.json({
+        message: "Debug info",
+        nodeEnv: process.env.NODE_ENV,
+        mongoUri: process.env.MONGO_URI ? "Set" : "Not set",
+        jwtSecret: process.env.JWT_SECRET ? "Set" : "Not set",
+        frontendUrl: process.env.FRONTEND_URL,
+        skipEmail: process.env.SKIP_EMAIL_ON_DEV,
+        skipOtp: process.env.SKIP_OTP_IN_DEV,
+        timestamp: new Date().toISOString()
+    });
+});
+
+// Health check endpoint
+app.get("/health", async (req, res) => {
+    try {
+        // Check database connection
+        const dbStatus = mongoose.connection.readyState === 1 ? "Connected" : "Disconnected";
+        
+        res.json({
+            status: "OK",
+            database: dbStatus,
+            timestamp: new Date().toISOString(),
+            uptime: process.uptime()
+        });
+    } catch (error) {
+        res.status(500).json({
+            status: "Error",
+            error: error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
 });
 
 app.use('/api', apiRoutes)
